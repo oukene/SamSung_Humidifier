@@ -7,7 +7,7 @@
  */
 
 metadata {
-    definition(name: "SamSung Humidified air purifier", namespace: "oukene", author: "oukene") {
+    definition(name: "samsung_humidifier", namespace: "oukene", author: "oukene") {
         capability "Refresh"
     }
     
