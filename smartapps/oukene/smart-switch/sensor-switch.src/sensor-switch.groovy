@@ -266,9 +266,9 @@ def eventHandler(evt)
                (light_meter == null || (light_meter != null && light_meter.currentIlluminance <= lux_max)))
             {
                 state.autoMode = true
+                switchOn()
             }
             log("main switch on")
-			switchOn()
         }
     }
     else if(evt.value == sensorAction && reactionValue == "toggle")
@@ -330,7 +330,7 @@ def switchOn() {
 }
 
 def switch_on_handler(evt) {
-    log("switch_off_handler called: $evt")
+    log("switch_on_handler called: $evt")
 }
 
 def switch_off_handler(evt) {
