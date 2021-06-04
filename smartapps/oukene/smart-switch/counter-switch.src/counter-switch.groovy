@@ -199,6 +199,8 @@ def initialize() {
 def motion_inside_detect_handler(evt) {
 	log("motion_inside_detect_handler called: $evt")
     
+    unschedule(switchOff)
+    
     state.in_motion_time = now()
     log("in motion : ${state.in_motion_time}, out motion : ${state.out_motion_time}")
    	log("millisecond : ${state.in_motion_time - state.out_motion_time}")
@@ -220,7 +222,9 @@ def motion_inside_detect_handler(evt) {
                 // 일정 시간 이후 강제 off
                 if(isForceOff)
                 {
-                	runIn(forceOffsecond, switchOff, [overwrite: true])
+                	if(0 == forceOffsecond)
+                		runIn(forceOffsecond, switchOff, [overwrite: true])
+					else schedule(now() + (forceOffsecond * 1000), switchOff)
                 }
             }
         }
@@ -235,6 +239,8 @@ def switchOff()
 
 def motion_outside_detect_handler(evt) {
 	log("motion_outside_detect_handler called: $evt")
+    
+    unschedule(switchOff)
     
     state.out_motion_time = now()
     log("in motion : ${state.in_motion_time}, out motion : ${state.out_motion_time}")
