@@ -88,14 +88,6 @@ def switchPage()
         section("스위치 설정") {
             input(name: "main_switch", type: "capability.switch", title: "이 스위치를 켭니다.", multiple: false, required: false)
         }
-        section() {
-        	input "isChildDevice", "bool", title: "가상 스위치를 생성하시겠습니까?", defaultValue: false, required: true, submitOnChange: true
-            if(isChildDevice)
-            {
-				input "counter_device_name", "text", title: "디바이스명", required: true, defaultValue: "virtual counter"
-                input "counter_device_refresh_interval", "number", title: "갱신주기(초)", required: true, defaultValue: "5"
-			}
-        }
     }
 }
 
@@ -106,6 +98,12 @@ def optionPage()
     {
         section("그리고 아래 옵션을 적용합니다(미 설정시 적용되지 않음)") {
         	input "appendSecond", "number", required: true, title: "추가 시간(초)", defaultValue: "10"
+        	input "isChildDevice", "bool", title: "가상 스위치를 생성하시겠습니까?", defaultValue: false, required: true, submitOnChange: true
+            if(isChildDevice)
+            {
+				input "counter_device_name", "text", title: "디바이스명", required: true, defaultValue: "virtual counter"
+                input "counter_device_refresh_interval", "number", title: "갱신주기(초)", required: true, defaultValue: "5"
+			}
             input "enableLog", "bool", title: "로그활성화", required: false, defaultValue: false
         }
         
@@ -113,15 +111,6 @@ def optionPage()
         {
             input "enable", "bool", title: "활성화", required: true, defaultValue: true
         }   
-        if (overrideLabel) {
-            section("") {
-                label title: "자동화 명칭", defaultValue: app.label, required: true
-            }
-        } else {
-            section("자동화 이름") {
-                paragraph app.label
-            }
-        }
         
         if (!overrideLabel) {
             // if the user selects to not change the label, give a default label
@@ -317,7 +306,7 @@ def addDevice(){
     
     if(!existChild(state.child_dni)){
         try{
-            def counter_device = addChildDevice("oukene", "virtual counter", state.child_dni, null, [
+            def counter_device = addChildDevice("oukene/smart-switch", "virtual counter", state.child_dni, null, [
                 "label": counter_device_name
             ])    
         }catch(err){

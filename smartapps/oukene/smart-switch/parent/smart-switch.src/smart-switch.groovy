@@ -11,8 +11,8 @@ definition(
     namespace: "oukene/smart-switch/parent",
     author: "oukene",
     description: "스위치 자동화",
-    pausable: true,
     category: "My Apps",
+    pausable: true,
     iconUrl: "https://cdn4.iconfinder.com/data/icons/scenarium-vol-15/128/015_smart_home_switch_on-512.png",
     iconX2Url: "https://cdn4.iconfinder.com/data/icons/scenarium-vol-15/128/015_smart_home_switch_on-512.png",
     iconX3Url: "https://cdn4.iconfinder.com/data/icons/scenarium-vol-15/128/015_smart_home_switch_on-512.png")

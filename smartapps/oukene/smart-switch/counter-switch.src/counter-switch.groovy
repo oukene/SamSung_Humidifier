@@ -309,7 +309,7 @@ def addDevice(){
     
     if(!existChild(state.child_dni)){
         try{
-            def counter_device = addChildDevice("oukene", "virtual counter", state.child_dni, null, [
+            def counter_device = addChildDevice("oukene/smart-switch", "virtual counter", state.child_dni, null, [
                 "label": counter_device_name
             ])    
         }catch(err){
