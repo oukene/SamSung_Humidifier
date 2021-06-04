@@ -104,7 +104,7 @@ def optionPage()
 				input "counter_device_name", "text", title: "디바이스명", required: true, defaultValue: "virtual counter"
                 input "counter_device_refresh_interval", "number", title: "갱신주기(초)", required: true, defaultValue: "5"
 			}
-            input "enableLog", "bool", title: "로그활성화", required: false, defaultValue: false
+            input "enableLog", "bool", title: "로그활성화", required: true, defaultValue: false
         }
         
         section("자동화 on/off")

@@ -126,7 +126,7 @@ def optionPage()
                 input "stay", "number", required: true, title: "동작 조건 변경 후 꺼짐지연시간(초)", defaultValue: "0"
                 input "useManualMode", "bool", title: "수동모드 활성화", defaultValue: false, required: true
 			}
-            input "enableLog", "bool", title: "로그활성화", required: false, defaultValue: true
+            input "enableLog", "bool", title: "로그활성화", required: true, defaultValue: false
         }
         timeInputs()
         

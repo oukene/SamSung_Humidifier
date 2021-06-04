@@ -91,7 +91,7 @@ def optionPage()
         section("그리고 아래 옵션을 적용합니다") {
         	input "onPeriod", "number", required: true, title: "켜짐 유지 시간(초)", defaultValue: "10"
             input "offPeriod", "number", required: true, title: "꺼짐 유지 시간(초)", defaultValue: "10"
-            input "enableLog", "bool", title: "로그활성화", required: false, defaultValue: false
+            input "enableLog", "bool", title: "로그활성화", required: true, defaultValue: false
         }
         timeInputs()
         
@@ -262,4 +262,3 @@ def log(msg)
     	log.debug msg
     }
 }
-
