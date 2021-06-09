@@ -29,9 +29,9 @@ preferences
 
 def dashBoardPage(){
 	dynamicPage(name: "dashBoardPage", title:"[Dash Board]", refreshInterval:1) {
-    	try
+        if(state.initialize)
         {
-            if(state.initialize)
+            try
             {
                 section("현재 상태") {
                     paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
@@ -40,22 +40,17 @@ def dashBoardPage(){
                     paragraph "현재상태: " + main_switch.currentSwitch
                     paragraph "" + (main_switch.currentSwitch == "on" ? "종료 예정 시각: " : "작동 예정 시각: ") + new Date(state.next_operator_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
                 }
-            }          
-            section() {
-                href "switchPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
             }
-            if(state.initialize)
-            {
-                section()
-                {
-                    href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
-                }
-            }
-		}
-        catch(all)
+            catch(all) { }
+        }          
+        section() {
+            href "switchPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+        }
+        if(state.initialize)
         {
-        	section("설정이 올바르지 않습니다. 재설정해주세요") {
-                href "switchPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            section()
+            {
+                href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
             }
         }
     }
