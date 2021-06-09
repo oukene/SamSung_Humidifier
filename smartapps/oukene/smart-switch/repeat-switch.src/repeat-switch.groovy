@@ -29,44 +29,33 @@ preferences
 
 def dashBoardPage(){
 	dynamicPage(name: "dashBoardPage", title:"[Dash Board]", refreshInterval:1) {
-    	if(state.initialize)
+    	try
         {
-        	section("현재 상태") {
-				paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
-                paragraph "[ " + (actuatorType ? "$actuatorType - $actuator" : "") + "switch - $main_switch ]"
-                //paragraph "[ $actuatorType - $actuator, switch - $main_switch ]"
-                paragraph "현재상태: " + main_switch.currentSwitch
-				paragraph "" + (main_switch.currentSwitch == "on" ? "종료 예정 시각: " : "작동 예정 시각: ") + new Date(state.next_operator_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
-			}
-     	}          
-        section() {
-          	href "switchPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
-       	}
-        if(state.initialize)
-        {
-            section()
+            if(state.initialize)
             {
-                href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                section("현재 상태") {
+                    paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
+                    paragraph "[ " + (actuatorType ? "$actuatorType - $actuator" : "") + "switch - $main_switch ]"
+                    //paragraph "[ $actuatorType - $actuator, switch - $main_switch ]"
+                    paragraph "현재상태: " + main_switch.currentSwitch
+                    paragraph "" + (main_switch.currentSwitch == "on" ? "종료 예정 시각: " : "작동 예정 시각: ") + new Date(state.next_operator_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
+                }
+            }          
+            section() {
+                href "switchPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            }
+            if(state.initialize)
+            {
+                section()
+                {
+                    href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                }
             }
 		}
-    }
-}
-
-def actuatorTypePage()
-{
-	dynamicPage(name: "actuatorTypePage", title: "설정", nextPage: "optionPage")
-    {
-        section()
+        catch(all)
         {
-            input "actuatorType", "enum", title: "동작 조건 선택", multiple: false, required: false, submitOnChange: true, options: [
-            	"button": "Button",
-                "switch": "Switch"]
-        }
-        if(actuatorType != null)
-        {
-            section("$actuatorType 설정") {
-                input(name: "actuator", type: "capability.$actuatorType", title: "$actuatorType 에서", required: true)
-                input(name: "actuatorAction", type: "enum", title: "다음 동작이 발생하면", options: actuatorValues(actuatorType), required: true)
+        	section("설정이 올바르지 않습니다. 재설정해주세요") {
+                href "switchPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
             }
         }
     }
@@ -74,7 +63,7 @@ def actuatorTypePage()
 
 def switchPage()
 {
-    dynamicPage(name: "switchPage", title: "", nextPage: "actuatorTypePage")
+    dynamicPage(name: "switchPage", title: "", nextPage: "optionPage")
     {
         section("스위치 설정") {
             input(name: "main_switch", type: "capability.switch", title: "이 스위치를 켭니다(메인스위치)", multiple: false, required: true)
@@ -126,17 +115,6 @@ def timeInputs() {
     }
 }
 
-private actuatorValues(attributeName) {
-    switch(attributeName) {
-        case "switch":
-            return ["on":"켜짐","off":"꺼짐"]
-        case "button":
-        	return ["push", "double", "held"]
-        default:
-            return ["UNDEFINED"]
-    }
-}
-
 
 def installed()
 {
@@ -156,103 +134,143 @@ def initialize()
 {
 	if(!enable) return
     
-    log(location)
-	
-	// if the user did not override the label, set the label to the default
-    //if (!overrideLabel) {
-    //    app.updateLabel(app.label)
-    //}
     subscribe(main_switch, "switch.off", switch_off_handler)
     subscribe(main_switch, "switch.on", switch_on_handler)
-	
-    if(actuator)
-    {
-        log("$actuator : $actuatorAction")
-        subscribe(actuator, "$actuatorType.$actuatorAction", startRepeatSwitch)
-	}
-    else
-    {
-    	log("actuator not selected")
-    }
-    
+
     if(startTime != null)
         schedule(startTime, scheduleOnHandler)
         
 	if(endTime != null)
         schedule(endTime, scheduleOffHandler)
-        
-	if(null == actuator && null == startTime)
+    
+    state.next_operator_time = now()
+    state.repeat_reservation = false
+    
+	if(null == startTime)
     {
-    	main_switch.off()
-        main_switch.on()
+    	log("initialize start")
+    	runIn(1, scheduleOnHandler)
     }
     
     state.initialize = true
 }
 
-
-def startRepeatSwitch(evt)
+def switch_for_repeat()
 {
-	log("$evt.name : $evt.value : $actuatorAction")
+	log("switch_for_repeat : $main_switch.currentSwitch")
     
-    state.next_operator_time = now() + (offPeriod * 1000)
-    main_switch.off()
-    main_switch.on()
+	if(!isBetween())
+    {
+    	log("IsBetween is false, cancel repeat")
+    	return
+    }
+    
+	def period = (main_switch.currentSwitch == "on" ? onPeriod : offPeriod)
+    
+	state.next_operator_time = now() + (period * 1000)
+    state.repeat_reservation = true
+    
+    //schedule(state.next_operator_time, switch_on_off)
+    runIn(period, switch_on_off, [overwrite: true])
 }
 
 
 def switch_on_handler(evt) {
 	log.debug "switch_on_handler"
-	state.next_operator_time = now() + (onPeriod * 1000)
+    
     if(sub_switch)
     {
     	sub_switch.on()
     }
-    runIn(onPeriod, switch_on_off, [overwrite: true])
+    
+    switch_for_repeat()
 }
 
 def switch_off_handler(evt) {
 	log("switch_off_handler")
-    state.next_operator_time = now() + (offPeriod * 1000)
+    
+    // 보조 스위치를 종료 시킨 후
     if(sub_switch)
     {
     	sub_switch.off()
     }
-    runIn(offPeriod, switch_on_off, [overwrite: true])
+    
+    if(state.repeat_reservation == true)
+    {
+    	log("stop repeat")
+    	resetSwitch()
+    }
+    else
+    {
+    	switch_for_repeat()
+    }
+}
+
+
+def resetSwitch()
+{
+	log("reset switch")
+    // 메인 스위치가 꺼져 있을 경우는 변수만 변경, 켜져 있을경우는 main 스위치를 끄면서 handler 에서 다시 호출되어 종료 처리
+    if(main_switch.currentSwitch == "off")
+    {
+    	state.repeat_reservation = false
+    }
+    else
+    {
+        main_switch.off()
+	}
 }
 
 def switch_on_off()
 {
+	log("switch_on_off - repeat_reservation : $state.repeat_reservation")
+	if(state.repeat_reservation == false) return
+    
+	state.repeat_reservation = false
 	if("on" == main_switch.currentSwitch)
     {
+    	//state.repeat_switch = true
     	main_switch.off()
     }
     else
     {
-    	def isBetween = true
-        if(null != startTime && null != endTime) { isBetween = timeOfDayIsBetween(startTime, endTime, new Date(), location.timeZone) }
-        log("between: $isBetween")
-    	if(isBetween)
+    	if(isBetween())
         {
+        	//state.repeat_switch = true
         	main_switch.on()
         }
     }
 }
 
+def isBetween()
+{
+	def ret = true
+    if(null != startTime && null != endTime) { ret = timeOfDayIsBetween(startTime, endTime, new Date(), location.timeZone) }
+    log("between: $ret")
+    return ret
+}
+
 def scheduleOnHandler()
 {
 	// 동작 조건이 지정되어있지 않을때만 자동 on
-	if(null == actuator)
+    log("start schedule - currentSwitch : $main_switch.currentSwitch")
+    // 현재 스위치가 꺼져 있으면 스위치를 켜는 동작으로 반복을 실행하고 현재 켜져 있으면 반복 액션만 실행 
+    state.repeat_reservation = true
+    if(main_switch.currentSwitch == "off")
     {
-        log("start schedule")
-        main_switch.on()
+    	log("main switch on")
+    	main_switch.on()
+	}
+    else
+    {
+        switch_for_repeat()
 	}
 }
 
 def scheduleOffHandler()
 {
 	log("end schedule")
-	main_switch.off()
+    resetSwitch()
 }
 
 def log(msg)
