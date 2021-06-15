@@ -30,36 +30,45 @@ preferences
 
 def dashBoardPage(){
 	dynamicPage(name: "dashBoardPage", title:"[Dash Board]", refreshInterval:1) {
-    	if(state.initialize)
+    	try
         {
-            section() {
-            	paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
-                paragraph "[ $sensorType - $sensor ]"
-                paragraph "상태: " + sensor.currentState(sensorActions(sensorType)).value
-                paragraph "스위치 켜진시각: " + new Date(state.on_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
-                paragraph "스위치 꺼진시각: " + new Date(state.off_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
-                paragraph "수동모드: " + (useManualMode == true ? "사용" : "미사용")
-                if(light_meter) 
-                { 
-                    paragraph "현재 조도: " + light_meter.currentIlluminance + ", 기준 조도: " + lux_max 
-                }
-                else { paragraph "조도 센서 미사용" }
-                if(true == useManualMode)
-                {
-                    paragraph "모드: " + (state.autoMode == true ? "자동모드" : "수동모드")
-                }
-			}
-     	}          
-        section() {
-          	href "sensorPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
-       	}
-        if(state.initialize)
-        {
-            section()
+            if(state.initialize)
             {
-                href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                section() {
+                    paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
+                    paragraph "[ $sensorType - $sensor ]"
+                    paragraph "상태: " + sensor.currentState(sensorActions(sensorType)).value
+                    paragraph "스위치 켜진시각: " + new Date(state.on_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
+                    paragraph "스위치 꺼진시각: " + new Date(state.off_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
+                    paragraph "수동모드: " + (useManualMode == true ? "사용" : "미사용")
+                    if(light_meter) 
+                    { 
+                        paragraph "현재 조도: " + light_meter.currentIlluminance + ", 기준 조도: " + lux_max 
+                    }
+                    else { paragraph "조도 센서 미사용" }
+                    if(true == useManualMode)
+                    {
+                        paragraph "모드: " + (state.autoMode == true ? "자동모드" : "수동모드")
+                    }
+                }
+            }          
+            section() {
+                href "sensorPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            }
+            if(state.initialize)
+            {
+                section()
+                {
+                    href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                }
             }
 		}
+        catch(all)
+        {
+        	section("설정이 올바르지 않습니다. 재설정해주세요") {
+                href "sensorPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            }
+        }
     }
 }
 
@@ -254,6 +263,7 @@ def eventHandler(evt)
     state.lastEventValue = evt.value
 	if (evt.value == sensorAction && reactionValue == "on")
     {
+        unschedule(switchOff)
     	def isBetween = true
         if(null != startTime && null != endTime) { isBetween = timeOfDayIsBetween(startTime, endTime, new Date(), location.timeZone) }
         log("between: $isBetween")
@@ -321,7 +331,7 @@ def switchOn() {
 	log("switchOn")
     // 지연 꺼짐을 덮어쓰기 위해 스위치 켜기 전 호출을 한번 해준다
     //runIn(0, switchOff, [overwrite: true])
-    unschedule(switchOff)
+    //unschedule(switchOff)
     main_switch.on()
     if(null != sub_switch)
     	sub_switch.on()

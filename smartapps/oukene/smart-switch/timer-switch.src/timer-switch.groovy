@@ -29,35 +29,44 @@ preferences
 
 def dashBoardPage(){
 	dynamicPage(name: "dashBoardPage", title:"[Dash Board]", refreshInterval:1) {
-    	if(state.initialize)
+    	try
         {
-        	section("") {
-            	paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
-                paragraph "[ $actuatorType - $actuator, switch - $main_switch ]"
-                paragraph "스위치 켜진시각: " + new Date(state.on_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
-                paragraph "꺼짐 예정시각: " + new Date(state.off_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
-                if(state.off_time > now())
-                	paragraph "남은 시간(초): " + (int)(((state.off_time - now()) / 1000) + 0.5)
-			}
-            if(isChildDevice)
+            if(state.initialize)
             {
-                section("")
-                {
-                	paragraph "가상디바이스명: " + counter_device_name
-                    paragraph "갱신주기" + counter_device_refresh_interval + "초"
+                section("") {
+                    paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
+                    paragraph "[ $actuatorType - $actuator, switch - $main_switch ]"
+                    paragraph "스위치 켜진시각: " + new Date(state.on_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
+                    paragraph "꺼짐 예정시각: " + new Date(state.off_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
+                    if(state.off_time > now())
+                        paragraph "남은 시간(초): " + (int)(((state.off_time - now()) / 1000) + 0.5)
                 }
-			}
-     	}          
-        section() {
-          	href "actuatorTypePage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
-       	}
-        if(state.initialize)
-        {
-            section()
+                if(isChildDevice)
+                {
+                    section("")
+                    {
+                        paragraph "가상디바이스명: " + counter_device_name
+                        paragraph "갱신주기" + counter_device_refresh_interval + "초"
+                    }
+                }
+            }          
+            section() {
+                href "actuatorTypePage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            }
+            if(state.initialize)
             {
-                href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                section()
+                {
+                    href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                }
             }
 		}
+        catch(all)
+        {
+        	section("설정이 올바르지 않습니다. 재설정해주세요") {
+                href "actuatorTypePage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            }
+        }
     }
 }
 

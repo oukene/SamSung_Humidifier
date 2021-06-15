@@ -28,40 +28,49 @@ preferences {
 
 def dashBoardPage() {
 	dynamicPage(name: "dashBoardPage", title:"", refreshInterval:1) {
-    	if(state.initialize)
+    	try
         {
-            section("") {
-                paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
-                paragraph "내부 모션 - " + (inside_motion.currentMotion == "active" ? "감지됨" : "미감지") + ", 감지시각 - " + new Date(state.in_motion_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
-                paragraph "외부 모션 - " + (outside_motion.currentMotion == "active" ? "감지됨" : "미감지") + ", 감지시각 - " + new Date(state.out_motion_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
-                if(main_switch)
-                {
-                	paragraph "스위치- " + (main_switch.currentSwitch == "on" ? "켜짐" : "꺼짐")
-                }
-                paragraph "인원수: " + state.counter
-                paragraph "수동모드: " + (useManualMode == true ? "사용" : "미사용")
-                if(light_meter) 
-                { 
-                	paragraph "현재 조도: " + state.lux + ", 기준 조도: " + lux_max 
-                }
-                else { paragraph "조도 센서 미사용" }
-                if(true == useManualMode)
-                {
-                    paragraph "모드: " + (state.autoMode ? "자동모드" : "수동모드")
-                }
-                paragraph (enable ? "활성화" : "비활성화")
-            }
-		}
-        section() {
-          	href "motionSensorPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
-       	}
-        if(state.initialize)
-        {
-            section()
+            if(state.initialize)
             {
-                href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                section("") {
+                    paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
+                    paragraph "내부 모션 - " + (inside_motion.currentMotion == "active" ? "감지됨" : "미감지") + ", 감지시각 - " + new Date(state.in_motion_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
+                    paragraph "외부 모션 - " + (outside_motion.currentMotion == "active" ? "감지됨" : "미감지") + ", 감지시각 - " + new Date(state.out_motion_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
+                    if(main_switch)
+                    {
+                        paragraph "스위치- " + (main_switch.currentSwitch == "on" ? "켜짐" : "꺼짐")
+                    }
+                    paragraph "인원수: " + state.counter
+                    paragraph "수동모드: " + (useManualMode == true ? "사용" : "미사용")
+                    if(light_meter) 
+                    { 
+                        paragraph "현재 조도: " + state.lux + ", 기준 조도: " + lux_max 
+                    }
+                    else { paragraph "조도 센서 미사용" }
+                    if(true == useManualMode)
+                    {
+                        paragraph "모드: " + (state.autoMode ? "자동모드" : "수동모드")
+                    }
+                    paragraph (enable ? "활성화" : "비활성화")
+                }
+            }
+            section() {
+                href "motionSensorPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            }
+            if(state.initialize)
+            {
+                section()
+                {
+                    href "optionPage", title: "옵션", description:"", image: "https://cdn4.iconfinder.com/data/icons/multimedia-internet-web/512/Multimedia_Internet_Web-16-512.png"
+                }
             }
 		}
+        catch(all)
+        {
+        	section("설정이 올바르지 않습니다. 재설정해주세요") {
+                href "motionSensorPage", title: "설정", description:"", image: "https://cdn4.iconfinder.com/data/icons/industrial-1-4/48/33-512.png"
+            }
+        }
     }
 }
 
