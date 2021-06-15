@@ -141,12 +141,13 @@ def initialize()
     state.next_operator_time = now()
     state.repeat_reservation = false
     
+    /*
 	if(null == startTime)
     {
     	log("initialize start")
     	runIn(1, scheduleOnHandler)
     }
-    
+    */
     state.initialize = true
 }
 
