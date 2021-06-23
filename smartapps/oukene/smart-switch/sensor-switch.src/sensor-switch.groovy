@@ -36,8 +36,17 @@ def dashBoardPage(){
             {
                 section() {
                     paragraph "- DashBoard", image: "https://cdn4.iconfinder.com/data/icons/finance-427/134/23-512.png"
-                    paragraph "[ $sensorType - $sensor ]"
-                    paragraph "상태: " + sensor.currentState(sensorActions(sensorType)).value
+                    paragraph "[ $sensorType ]"
+                    def isList = sensor instanceof List
+                    if(isList) {
+                        sensor.each {
+                            paragraph "" + it.displayName + " - " + it.currentState(sensorActions(sensorType)).value	
+                        }
+					}
+                    else 
+                    {
+                    	paragraph "" + sensor.displayName + " - " + sensor.currentState(sensorActions(sensorType)).value	
+					}
                     paragraph "스위치 켜진시각: " + new Date(state.on_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
                     paragraph "스위치 꺼진시각: " + new Date(state.off_time).format('yyyy-MM-dd HH:mm:ss.SSS', location.getTimeZone())
                     paragraph "수동모드: " + (useManualMode == true ? "사용" : "미사용")
@@ -86,12 +95,17 @@ def sensorPage()
                 "button": "버튼",
                 "waterSensor": "물 감지 센서"]
         }
-        if(sensorType != null)
-        {
-            	section("$sensorType 설정") {
-                    input(name: "sensor", type: "capability.$sensorType", title: "$sensorType 에서", required: true)
-                    input(name: "sensorAction", type: "enum", title: "다음 동작이 발생하면", options: attributeValues(sensorType), required: true)
+        if(sensorType != null) {
+            section("$sensorType 설정") {
+                input(name: "sensor", type: "capability.$sensorType", title: "$sensorType 에서", required: true, multiple: true, submitOnChange: true)
+                input(name: "sensorAction", type: "enum", title: "다음 동작이 발생하면", options: attributeValues(sensorType), required: true)
+            }
+           	def isList = sensor instanceof List
+			if(true == isList && sensor.size() > 1) {
+                section("") {
+                    input "isAllDevices", "bool", title: "선택된 디바이스 모두에서 조건 만족 할 경우에만", required: true, defaultValue: false
                 }
+            }
         }
     }
 }
@@ -100,12 +114,17 @@ def switchPage()
 {
     dynamicPage(name: "switchPage", title: "", nextPage: "optionPage")
     {
+    	log.debug "is All Device: " + isAllDevices
         section("스위치 설정") {
             input(name: "main_switch", type: "capability.switch", title: "이 스위치와", required: true, submitOnChange: true)
             input(name: "sub_switch", type: "capability.switch", title: "추가로 이 스위치들을", multiple: true, required: false)
             if(main_switch)
             {
-            	input(name: "reactionValue", type: "enum", title: "아래와 같이 실행하고 조건이 변경되면 끕니다(버튼은 끄기 제외)", options: reactionValues("switch"), required: true)
+            	input(name: "reactionValue", type: "enum", title: "아래와 같이 실행하고 조건이 변경되면 끕니다(버튼은 끄기 제외)", options: reactionValues("switch"), required: true, submitOnChange: true)
+                def isList = sensor instanceof List 
+                if(true == isList && reactionValue == "on" && sensor.size() > 1) {
+					input "isAllDevices_off", "bool", title: "선택된 디바이스 모두에서 조건이 변경될 경우에만 꺼짐", required: true, defaultValue: false
+                }
             }
         }
     }
@@ -146,7 +165,7 @@ def optionPage()
         
         if (!overrideLabel) {
             // if the user selects to not change the label, give a default label
-            def l = sensor.displayName + "-" + main_switch.displayName + ": Sensor Switch"
+            def l = main_switch.displayName + ": Sensor Switch"
             log.debug "will set default label of $l"
             app.updateLabel(l)
         }
@@ -256,13 +275,28 @@ def initialize()
     log("init finish")
 }
 
+def isAllDevicesConditionCheck(value)
+{
+	def ret = true
+    def isList = sensor instanceof List 
+    if(isList)
+    {
+        sensor.each {
+        	if(it.currentState(sensorActions(sensorType)).value != value)
+            	ret = false
+        }
+    }
+    return ret
+}
+
 def eventHandler(evt)
 {
 	log("$evt.name : $evt.value : $sensorAction : $reactionValue")
     
-    state.lastEventValue = evt.value
 	if (evt.value == sensorAction && reactionValue == "on")
     {
+    	if(isAllDevices && !isAllDevicesConditionCheck(evt.value)) return
+        
         unschedule(switchOff)
     	def isBetween = true
         if(null != startTime && null != endTime) { isBetween = timeOfDayIsBetween(startTime, endTime, new Date(), location.timeZone) }
@@ -304,6 +338,8 @@ def eventHandler(evt)
             	if(sensorType != "button")
                 {
                     //꺼짐 작동
+                    if(isAllDevices_off && !isAllDevicesConditionCheck(evt.value)) return
+                    
                     log("scheduled off : $stay seconds")
                     if(0 == stay) runIn(stay, switchOff, [overwrite: true])
                     else schedule(now() + (stay *1000), switchOff)
