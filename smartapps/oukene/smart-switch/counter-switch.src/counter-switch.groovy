@@ -44,7 +44,7 @@ def dashBoardPage() {
                     paragraph "수동모드: " + (useManualMode == true ? "사용" : "미사용")
                     if(light_meter) 
                     { 
-                        paragraph "현재 조도: " + state.lux + ", 기준 조도: " + lux_max 
+                        paragraph "현재 조도: " + light_meter.currentIlluminance + ", 기준 조도: " + lux_max 
                     }
                     else { paragraph "조도 센서 미사용" }
                     if(true == useManualMode)
